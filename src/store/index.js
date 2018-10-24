@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import 'es6-promise/auto'
-import VueInstance from '@/main'
+import axios from 'axios'
 
 Vue.use(Vuex)
 
@@ -83,12 +83,14 @@ export default new Vuex.Store({
         phone: payload.phone,
         message: payload.message
       }
-      await VueInstance.$http.post('http://localhost:3000/messages', message)
-        .then(response => response.json())
+      await postRequest('db', 'post', message, true)
+       // .then(response => response.json())
         .then(data => {
+          console.log(data)
           commit('response', 'Your message has been successfully sent!')
           commit('setLoading', false)
         }).catch(error => {
+          console.log(error)
           commit('setError', 'An error has occurred!')
           commit('setLoading', false)
           throw error
@@ -96,3 +98,14 @@ export default new Vuex.Store({
     }
   }
 })
+
+export function postRequest (action, method, params = {}, mock = false) {
+  // const data = buildParams(params)
+  const url = `${process.env.API_URL}${action}`
+  if (mock) {
+    return import(`@/tests/${action}.json`)
+      .then(response => response.default)
+  }
+  return axios({ method, url, params })
+    .then(response => response.data)
+}
